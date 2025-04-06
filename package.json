@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "buffer-crc32": "^1.0.0",
+    "unzipit": "^1.4.3",
+    "xml2js": "^0.6.2"
+  }
+}
