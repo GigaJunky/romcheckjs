@@ -15,7 +15,9 @@ let cfg = {
     dats: {
         path :  "../../../RetroPie/ROMVault_V3.7.2/"
         ,names: [
-            "Nintendo - Nintendo 64 (ByteSwapped) (20250329-063244).dat"
+            "Atari - Atari 2600 (DB Export) (20250404-023226).xml"
+            ,"Nintendo - Nintendo 64 (DB Export) (20250329-063244).xml",
+            ,"Nintendo - Nintendo 64 (ByteSwapped) (20250329-063244).dat"
             ,"Nintendo - Nintendo 64 (BigEndian) (20250329-063244).dat"
             ,"Nintendo Famicom & Entertainment System - Games - [NES] (TOSEC-v2025-01-15_CM).dat"
             ,"Atari 2600 & VCS - Games (TOSEC-v2025-01-15_CM).dat"
