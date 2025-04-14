@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>CocoCas2Wav.js</title>
+        <style>
+            @import url('https://fonts.cdnfonts.com/css/color-basic');
+            
+            html { font-family: 'Color Basic', sans-serif; font-size: 16px; background: black; color: black }
+            body { background: #95DB54; padding: 0 20px; width: 90%; margin: 0 auto }
+            audio { width: 90% }
+            button, audio, select, input[type="file"]::file-selector-button {
+                background-color:  black; color: white;
+                border: none; border-radius: 4px; padding: 15px 32px; text-align: center;
+                text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px;
+                cursor: pointer; opacity: 0.6; transition: 0.3s;
+            }
+            li { font-family: monospace;}
+
+            button:hover, input[type="file"]::file-selector-button:hover {opacity: 1}
+
+        </style>
+    </head>
+<body>
+    <h2>RomCheck.JS</h2>
+    <div>By BitJunky</div>
+    <div>
+        <select id="selZFiles" size="10" style="width: 600px; display: none"></select>
+        <select id="selDFiles" size="10" style="width: 600px; display: none"></select>
+        <p>CHECKSUMS SHA-1</p>
+
+        <div>
+        <label for="FileCS">FILE:</label>
+        <span id="FileCS"></span>
+        </div>
+        <div>
+        <label for="CasCS">CAS:</label>
+        <span id="CasCS"></span>
+        </div>
+        <div>
+        <label for="WavCS">WAV:</label>
+        <span id="WavCS"></span>
+        </div>
+        <input type="file" accept=".p,.cas,.dsk,.zip" id="file-input" multiple>
+        <button id="btnSaveWav">Save .wav</button>
+        <button id="btnSaveCas">Save .cas</button>
+        <br>
+        <textarea  spellcheck="false" style="width: 100%;" rows="10" cols="40" id="taBas"></textarea>
+        
+
+        <ul>
+            <li>
+            Rom Checker
+            </li>
+            <li>25-04-14 v1 - Intial write.</li>
+            
+        </ul>
+        <footer>
+            <a href="https://gigajunky.github.io/">gigajunky.github.io/</a>
+        </footer>
+    </div>
+    <script src="https://unpkg.com/unzipit@1.4.0/dist/unzipit.js"></script>
+    <script src="index.js"></script>
+    <script src="../romscsp.js"></script>
+
+</body></html>
