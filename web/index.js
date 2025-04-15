@@ -2,6 +2,7 @@
 
             const Audio = document.getElementById("Audio")
             , fileInput = document.getElementById("file-input")
+            , datfileInput = document.getElementById("datfile-input")
             , btnSaveWav = document.getElementById("btnSaveWav")
             , btnSaveCas = document.getElementById("btnSaveCas")
             , selZFiles = document.getElementById("selZFiles")
@@ -12,15 +13,42 @@
             , taBas = document.getElementById("taBas")
             btnSaveWav.onclick = Download
             btnSaveCas.onclick = Download
-            fileInput.onchange = readFilesCS //readZipFiles //readFile
+            fileInput.onchange = readFilesCStext // readFilesCSJson //readZipFiles //readFile
+            datfileInput.onchange = readDatFiles //readZipFiles //readFile
             selZFiles.ondblclick = selZFilesOnChange
             selDFiles.ondblclick = selDFilesOnChange
-            
-            let zentries, dir, dskbuf, cas, cocoCasWave
 
-            async function readFilesCS(f)
+            const enc = new TextDecoder("utf-8")
+            function encStr(s) { return new TextEncoder("utf-8").encode(s) }
+            function decStr(b) { return new TextDecoder("utf-8").decode(b) }
+
+            let zentries, dir, dskbuf, cas, cocoCasWave, dat
+
+            async function readDatFiles(event)
             {
-                console.log('f:', dat[123])
+
+                const file = event.target.files[0]
+                const arrayBuffer = await file.arrayBuffer()
+                dat =  decStr(arrayBuffer)  //JSON.parse()
+                console.log('f:', file,dat)
+                /*
+                if (file) {
+                    const reader = new FileReader()
+                    reader.onload = (e) => {
+                        dat = e.target.result
+                        console.log(dat)
+                    }
+                    reader.readAsText(file)
+                }
+                */
+
+            }
+
+            async function readFilesCStext(f)
+            {
+                console.log('f:', dat)
+                //const games = dat.datafile.game
+                //console.log(games.length)
 
                 for (const file of fileInput.files) {
                     const arrayBuffer = await file.arrayBuffer()
@@ -29,10 +57,34 @@
                     for (const [name, entry] of Object.entries(entries)) {
                         console.log(entry)
                         const crc =  entry._rawEntry.crc32.toString(16).padStart(8,"0")
-                        matches = dat.filter(f=> f[0].crc == crc)
+                        //matches = dat.filter(f=> f[0].crc == crc)
+                        //const matches = games.filter(f=> f.source && f.source[0].file && f.source[0].file[0].$.crc32 == crc ) //NoIntro .json
+                        match = dat.includes(crc)
+                        taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${match} `
+                        //taBas.value += `\n${file.name}, ${sha1} `;
+                    }
+                }
+            }
+
+
+            async function readFilesCSJson(f)
+            {
+                console.log('f:', dat)
+                const games = dat.datafile.game
+                console.log(games.length)
+
+                for (const file of fileInput.files) {
+                    const arrayBuffer = await file.arrayBuffer()
+                    //const sha1 = await SHAbuf(arrayBuffer)
+                    const {entries} = await unzipit.unzip(file)
+                    for (const [name, entry] of Object.entries(entries)) {
+                        console.log(entry)
+                        const crc =  entry._rawEntry.crc32.toString(16).padStart(8,"0")
+                        //matches = dat.filter(f=> f[0].crc == crc)
+                        const matches = games.filter(f=> f.source && f.source[0].file && f.source[0].file[0].$.crc32 == crc ) //NoIntro .json
                         console.log(matches)
                         if(matches.length > 0)
-                            taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${matches[0][0].name} `
+                            taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${matches[0].$.name} `
                         else
                             taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: No`
                         //taBas.value += `\n${file.name}, ${sha1} `;

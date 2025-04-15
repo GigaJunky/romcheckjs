@@ -41,7 +41,15 @@
         <label for="WavCS">WAV:</label>
         <span id="WavCS"></span>
         </div>
-        <input type="file" accept=".p,.cas,.dsk,.zip" id="file-input" multiple>
+        <div>
+            <label for="files" class="btn">SELECT DATS</label>
+            <input type="file" accept="*.xml,*.dat,*.json" id="datfile-input" multiple>
+        </div>
+        <div>
+            <label for="files" class="btn">SELECT ROMS</label>
+            <input type="file" accept=".p,.cas,.dsk,.zip" id="file-input" multiple>
+        </div>
+
         <button id="btnSaveWav">Save .wav</button>
         <button id="btnSaveCas">Save .cas</button>
         <br>
@@ -61,6 +69,5 @@
     </div>
     <script src="https://unpkg.com/unzipit@1.4.0/dist/unzipit.js"></script>
     <script src="index.js"></script>
-    <script src="../romscsp.js"></script>
 
 </body></html>
