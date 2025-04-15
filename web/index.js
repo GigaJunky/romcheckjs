@@ -11,6 +11,8 @@
             , CasCS = document.getElementById("CasCS")
             , WavCS = document.getElementById("WavCS")
             , taBas = document.getElementById("taBas")
+            , lblCount = document.getElementById("lblCount")
+
             btnSaveWav.onclick = Download
             btnSaveCas.onclick = Download
             fileInput.onchange = readFilesCStext // readFilesCSJson //readZipFiles //readFile
@@ -22,26 +24,53 @@
             function encStr(s) { return new TextEncoder("utf-8").encode(s) }
             function decStr(b) { return new TextDecoder("utf-8").decode(b) }
 
-            let zentries, dir, dskbuf, cas, cocoCasWave, dat
+            let zentries, dir, dskbuf, cas, cocoCasWave, dat, datText, table, gamesTable = []
 
+            table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", clipboard:true, autoColumns:true, 
+                autoColumnsDefinitions:function(definitions){
+                  for (const c of definitions) {
+                    c.headerFilter = true
+                    //c.headerVertical = true
+                  }
+                  return definitions
+                }
+              })
+            
+            
+            //trigger an alert message when the row is clicked
+            table.on("rowClick", function(e, row){ 
+               alert("Row " + row.getData().id + " Clicked!!!!");
+            })
+            table.on("dataLoaded", function(data){
+                console.log("dataLoaded:",  data.length)
+                lblCount.innerHTML = data.length
+            })
+            table.on("dataFiltered", function(filters, rows){
+                //filters - array of filters currently applied
+                //rows - array of row components that pass the filters
+                lblCount.innerHTML = rows.length
+            })
+          
+
+             //NoIntro DB
             async function readDatFiles(event)
             {
-
                 const file = event.target.files[0]
                 const arrayBuffer = await file.arrayBuffer()
-                dat =  decStr(arrayBuffer)  //JSON.parse()
-                console.log('f:', file,dat)
-                /*
-                if (file) {
-                    const reader = new FileReader()
-                    reader.onload = (e) => {
-                        dat = e.target.result
-                        console.log(dat)
-                    }
-                    reader.readAsText(file)
+                datText =  decStr(arrayBuffer)
+                const jDat = JSON.parse(datText)
+                gamesTable = []
+                for (const g of jDat.datafile.game) {
+                    if(g.source)
+                        for (const gs of g.source) 
+                            if(gs.file)
+                                for (const gsf of gs.file) {
+                                    //console.log(g.$.name, gsf.$.crc32 )
+                                    if(!gamesTable.some( i => i.crc == gsf.$.crc32))
+                                        gamesTable.push({name: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, md5: gsf.$.md5, sh1: gsf.$.sha1, bad: gsf.$.bad, region: g.archive[0].$.region })
+                                }
                 }
-                */
-
+                table.setData(gamesTable)
             }
 
             async function readFilesCStext(f)
@@ -55,15 +84,21 @@
                     //const sha1 = await SHAbuf(arrayBuffer)
                     const {entries} = await unzipit.unzip(file)
                     for (const [name, entry] of Object.entries(entries)) {
-                        console.log(entry)
+                        //console.log(entry)
                         const crc =  entry._rawEntry.crc32.toString(16).padStart(8,"0")
                         //matches = dat.filter(f=> f[0].crc == crc)
                         //const matches = games.filter(f=> f.source && f.source[0].file && f.source[0].file[0].$.crc32 == crc ) //NoIntro .json
-                        match = dat.includes(crc)
-                        taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${match} `
-                        //taBas.value += `\n${file.name}, ${sha1} `;
+                        //const matches = gamesTable.filter(f=> f.crc == crc ) //NoIntro .json
+                        let fi = gamesTable.findIndex(i => i.crc == crc)
+                        if(fi >=0)
+                            gamesTable[fi].match = 1
+                        else
+                            gamesTable.push({name: file.name, match: -1, crc: crc })
+
+                        taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${fi} `
                     }
                 }
+                table.setData(gamesTable)   
             }
 
 

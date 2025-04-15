@@ -2,11 +2,11 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>CocoCas2Wav.js</title>
+        <title>RomCheck.js</title>
         <style>
             @import url('https://fonts.cdnfonts.com/css/color-basic');
             
-            html { font-family: 'Color Basic', sans-serif; font-size: 16px; background: black; color: black }
+            html { font-family: '!Color Basic', sans-serif; font-size: 16px; background: black; color: black }
             body { background: #95DB54; padding: 0 20px; width: 90%; margin: 0 auto }
             audio { width: 90% }
             button, audio, select, input[type="file"]::file-selector-button {
@@ -52,9 +52,10 @@
 
         <button id="btnSaveWav">Save .wav</button>
         <button id="btnSaveCas">Save .cas</button>
+        <label id="lblCount"></label>
         <br>
         <textarea  spellcheck="false" style="width: 100%;" rows="10" cols="40" id="taBas"></textarea>
-        
+        <div id="table"></div>
 
         <ul>
             <li>
@@ -67,6 +68,10 @@
             <a href="https://gigajunky.github.io/">gigajunky.github.io/</a>
         </footer>
     </div>
+
+    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+
     <script src="https://unpkg.com/unzipit@1.4.0/dist/unzipit.js"></script>
     <script src="index.js"></script>
 
