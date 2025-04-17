@@ -150,8 +150,26 @@ table.on("dataFiltered", function(filters, rows){
 //#endregion
 
 
-    //NoIntro DB
+    //TOSEC
 async function readDatFiles(event)
+{
+    const file = event.target.files[0]
+    const arrayBuffer = await file.arrayBuffer()
+    datText =  decStr(arrayBuffer)
+    const jDat = JSON.parse(datText)
+    //gamesTable = []
+    for (const g of jDat.datafile.game) {
+        for (const r of g.rom){ 
+            console.log(g.$.name, r.$.crc32 )
+            if(!gamesTable.some( i => i.crc == r.$.crc))
+                gamesTable.push({glen: jDat.datafile.game.length, zname: undefined, zsize: undefined,  name: g.$.name, match: 0, size: r.$.size, crc: r.$.crc, crcMatch: undefined, md5: r.$.md5, sha1: r.$.sha1, sha1Match: undefined })
+        }
+    }
+    table.setData(gamesTable)
+}
+
+//NoIntro
+async function readDatFilesNIDB(event)
 {
     const file = event.target.files[0]
     const arrayBuffer = await file.arrayBuffer()
