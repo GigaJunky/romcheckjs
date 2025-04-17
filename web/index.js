@@ -24,7 +24,7 @@ const enc = new TextDecoder("utf-8")
 function encStr(s) { return new TextEncoder("utf-8").encode(s) }
 function decStr(b) { return new TextDecoder("utf-8").decode(b) }
 
-let zentries, dir, dskbuf, cas, cocoCasWave, dat, datText, table, gamesTable = []
+let zentries, dat, datText, table, gamesTable = []
 
 // #region Tabulator
 //headerMenu:headerMenu
@@ -77,6 +77,7 @@ table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", cl
     paginationSize: 100,
     paginationSizeSelector:[30, 50, 80, 100, 200],
     paginationCounter:"rows",
+
     autoColumnsDefinitions:function(definitions){
         for (const c of definitions) {
             c.headerFilter = true
@@ -89,7 +90,7 @@ table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", cl
 
 //trigger an alert message when the row is clicked
 table.on("rowClick", function(e, row){ 
-    alert("Row " + row.getData().id + " Clicked!!!!")
+    //alert("Row " + row.getData().id + " Clicked!!!!")
 })
 table.on("dataLoaded", function(data){
     console.log("dataLoaded:",  data.length)
@@ -100,6 +101,15 @@ table.on("dataFiltered", function(filters, rows){
     //rows - array of row components that pass the filters
     lblCount.innerHTML = rows.length
 })
+window.addEventListener("keydown", (e) => {
+    console.log(`Key "${e.key}" pressed [event: keydown]  ${table.getPage()}`);
+    if(e.shiftKey)
+        if(e.key === 'PageDown') table.nextPage()
+        else if (e.key === 'PageUp')  table.previousPage()
+        else if (e.key === 'Home')  table.setPage(1)
+        else if (e.key === 'End')  table.setPage("last")
+  })
+
 
 
 //define column header menu as column visibility toggle
@@ -149,7 +159,6 @@ table.on("dataFiltered", function(filters, rows){
     }
 //#endregion
 
-
     //TOSEC
 async function readDatFiles(event)
 {
@@ -157,6 +166,7 @@ async function readDatFiles(event)
     const arrayBuffer = await file.arrayBuffer()
     datText =  decStr(arrayBuffer)
     const jDat = JSON.parse(datText)
+    if(jDat.datafile.game[0].rom == undefined) return readDatFilesNIDB(event)
     //gamesTable = []
     for (const g of jDat.datafile.game) {
         for (const r of g.rom){ 
