@@ -28,7 +28,6 @@
         <select id="selZFiles" size="10" style="width: 600px; display: none"></select>
         <select id="selDFiles" size="10" style="width: 600px; display: none"></select>
         <p>CHECKSUMS SHA-1</p>
-
         <div>
         <label for="FileCS">FILE:</label>
         <span id="FileCS"></span>
@@ -43,18 +42,17 @@
         </div>
         <div>
             <label for="files" class="btn">SELECT DATS</label>
-            <input type="file" accept="*.xml,*.dat,*.json" id="datfile-input" multiple>
+            <input type="file" accept=".json" id="datfile-input" multiple>
         </div>
         <div>
             <label for="files" class="btn">SELECT ROMS</label>
-            <input type="file" accept=".p,.cas,.dsk,.zip" id="file-input" multiple>
+            <input type="file" accept=".zip" id="file-input" multiple>
         </div>
 
-        <button id="btnSaveWav">Save .wav</button>
-        <button id="btnSaveCas">Save .cas</button>
         <label id="lblCount"></label>
         <br>
         <textarea  spellcheck="false" style="width: 100%;" rows="10" cols="40" id="taBas"></textarea>
+
         <div id="table"></div>
 
         <ul>
@@ -71,7 +69,9 @@
 
     <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
-
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/unzipit@1.4.0/dist/unzipit.js"></script>
     <script src="index.js"></script>
 
