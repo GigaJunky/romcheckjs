@@ -3,8 +3,6 @@
 const Audio = document.getElementById("Audio")
 , fileInput = document.getElementById("file-input")
 , datfileInput = document.getElementById("datfile-input")
-, btnSaveWav = document.getElementById("btnSaveWav")
-, btnSaveCas = document.getElementById("btnSaveCas")
 , selZFiles = document.getElementById("selZFiles")
 , selDFiles = document.getElementById("selDFiles")
 , FileCS = document.getElementById("FileCS")
@@ -18,7 +16,7 @@ console.log('cfg: ', cfg)
 
 
 fileInput.onchange = readFilesCStext // readFilesCSJson //readZipFiles //readFile
-datfileInput.onchange = readDatFiles //readZipFiles //readFile
+datfileInput.onchange =  readDatFiles //readZipFiles //readFile
 
 const enc = new TextDecoder("utf-8")
 function encStr(s) { return new TextEncoder("utf-8").encode(s) }
@@ -27,6 +25,50 @@ function decStr(b) { return new TextDecoder("utf-8").decode(b) }
 let zentries, dat, datText, table, gamesTable = []
 
 // #region Tabulator
+
+
+var rowPopupFormatter = function(e, row, onRendered){
+    var data = row.getData(),
+    container = document.createElement("div"),
+    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
+    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
+    contents += "<li><strong>sha1:</strong> " + data.sha1 + "</li>";
+    contents += "<li><strong>md5:</strong> " + data.md5 + "</li>";
+    contents += "</ul>";
+
+    container.innerHTML = contents;
+
+    return container;
+};
+
+//create header popup contents
+var headerPopupFormatter = function(e, column, onRendered){
+    var container = document.createElement("div");
+
+    var label = document.createElement("label");
+    label.innerHTML = "Filter Column:";
+    label.style.display = "block";
+    label.style.fontSize = ".7em";
+
+    var input = document.createElement("input");
+    input.placeholder = "Filter Column...";
+    input.value = column.getHeaderFilterValue() || "";
+
+    input.addEventListener("keyup", (e) => {
+        column.setHeaderFilterValue(input.value);
+    });
+
+    container.appendChild(label);
+    container.appendChild(input);
+
+    return container;
+}
+
+//create dummy header filter to allow popup to filter
+var emptyHeaderFilter = function(){
+    return document.createElement("div");;
+}
+
 //headerMenu:headerMenu
 
 var rowMenu = [
@@ -72,6 +114,7 @@ var rowMenu = [
 
 table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", clipboard:true, autoColumns:true, 
     placeholder:"Awaiting Data, Please Load File",
+    rowClickPopup:rowPopupFormatter, 
     rowContextMenu: rowMenu,
     pagination:"local",
     paginationSize: 100,
@@ -158,46 +201,109 @@ window.addEventListener("keydown", (e) => {
         return menu
     }
 //#endregion
-
-    //TOSEC
-async function readDatFiles(event)
+/*
+async function readXmlDatFiles(event)
 {
     const file = event.target.files[0]
     const arrayBuffer = await file.arrayBuffer()
     datText =  decStr(arrayBuffer)
-    const jDat = JSON.parse(datText)
-    if(jDat.datafile.game[0].rom == undefined) return readDatFilesNIDB(event)
+    console.log(datText)
+    console.log(xml2js(datText))
+}
+*/
+async function readDatFiles(event)
+{
+    for (const file of event.target.files) {
+        const arrayBuffer = await file.arrayBuffer()
+        datText =  decStr(arrayBuffer)
+        //console.log(datText)
+        let jDat = xml2js(datText)
+        if(jDat.game[0].rom == undefined) 
+            readDatFilesNIDB(jDat)
+        else if(jDat.header)
+            readDatFile(jDat, file)
+        else readMameDatFile(jDat, file)
+    }
+}
+
+async function readMameDatFile(jDat, file)
+{
+    //mame 0.78 mame.game.rom
+    //mame 0.139 mame.game.rom
+    //mame 0.276 mame.machine.rom
+    console.log(jDat)
+    let games = jDat.machine ? jDat.machine : jDat.game
+    //console.log(games.length)
+    for (const game of games) {
+        console.log(`${game.$.name} ${game.description} ${game.year} ${game.manufacturer} ${game.rom ? game.rom.length: 0}`)
+        
+        if(game.rom && Array.isArray(game.rom))
+             for (const r of game.rom){
+                console.log(`r: ${r.$.name} ${r.$.size} ${r.$.crc} ${r.$.sha1}`)
+                gamesTable.push({
+                    glen: games.length, zname: undefined, zsize: undefined,
+                    name: game.$.name, rname: r.$.name, match: 0, size: r.$.size,
+                    crc: r.$.crc, crcMatch: undefined, sha1: r.$.sha1, sha1Match: undefined
+                    , description: game.description
+                })
+            }
+    }
+    table.setData(gamesTable)
+    console.log("Done")
+}
+
+    //TOSEC
+async function readDatFile(jDat, filename)
+{
+    if(jDat.header){
+        const h = jDat.header
+        console.log(h)
+        printMsg(`Loading ${h.name} - ${h.category} - Ver: ${h.version} ${jDat.game.length | 0}`)
+    }else printMsg(filename)        
+    
+    if(jDat.game && !Array.isArray(jDat.game)){
+        console.log('only 1 game?!')
+        jDat.game = [jDat.game]
+    } else {
+        if(jDat.game.length == 0){
+            printMsg('No Games found!', jDat.game.length)
+            return "No Games Found!"
+        }
+    } 
+    console.log(jDat.game[0].rom)
     //gamesTable = []
-    for (const g of jDat.datafile.game) {
-        for (const r of g.rom){ 
-            console.log(g.$.name, r.$.crc32 )
+    for (const g of jDat.game) {
+        let roms = Array.isArray(g.rom) ? g.rom : [g.rom]
+        for (const r of roms){ 
+            console.log(g.$.name, r.$.crc )
             if(!gamesTable.some( i => i.crc == r.$.crc))
-                gamesTable.push({glen: jDat.datafile.game.length, zname: undefined, zsize: undefined,  name: g.$.name, match: 0, size: r.$.size, crc: r.$.crc, crcMatch: undefined, md5: r.$.md5, sha1: r.$.sha1, sha1Match: undefined })
+                gamesTable.push({glen: jDat.game.length, zname: undefined, zsize: undefined,  name: g.$.name, match: 0, size: r.$.size, crc: r.$.crc, crcMatch: undefined, md5: r.$.md5, sha1: r.$.sha1, sha1Match: undefined })
         }
     }
     table.setData(gamesTable)
 }
 
-//NoIntro
-async function readDatFilesNIDB(event)
-{
-    const file = event.target.files[0]
-    const arrayBuffer = await file.arrayBuffer()
-    datText =  decStr(arrayBuffer)
-    const jDat = JSON.parse(datText)
-    //gamesTable = []
-    for (const g of jDat.datafile.game) {
-        if(g.source)
-            for (const gs of g.source) 
-                if(gs.file)
-                    for (const gsf of gs.file) {
-                        //console.log(g.$.name, gsf.$.crc32 )
-                        if(!gamesTable.some( i => i.crc == gsf.$.crc32))
-                            gamesTable.push({glen: jDat.datafile.game.length, zname: undefined, zsize: undefined,  name: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, crcMatch: undefined, md5: gsf.$.md5, sha1: gsf.$.sha1, sha1Match: undefined, bad: gsf.$.bad, region: g.archive[0].$.region })
+//NoIntro DB
+//datafile.game.source.file.crc32
+    async function readDatFilesNIDB(jDat) {
+        for (const g of jDat.game) {
+            console.log(g.$.name)
+            if (g.source) {
+                let sources = !Array.isArray(g.source) ? [g.source] : g.source
+                for (const gs of sources) {
+                    if (gs.file) {
+                        let files = Array.isArray(gs.file) ? gs.file : [gs.file]
+                        for (const gsf of files) {
+                            //console.log(g.$.name, gsf.$.crc32 )
+                            if (!gamesTable.some(i => i.crc == gsf.$.crc32))
+                                gamesTable.push({ glen: jDat.game.length, zname: undefined, zsize: undefined, name: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, crcMatch: undefined, md5: gsf.$.md5, sha1: gsf.$.sha1, sha1Match: undefined, bad: gsf.$.bad, region: g.archive.$.region })
+                        }
                     }
+                }
+            }
+        }
+        table.setData(gamesTable)
     }
-    table.setData(gamesTable)
-}
 
 async function readFilesCStext(f)
 {
@@ -271,6 +377,11 @@ async function readFilesCSJson(f)
     }
 }
 
+function printMsg(msg)
+{
+    console.log(msg)
+    taBas.value += `${msg}\n`
+}
 
 //for unzipit
 async function readZipFiles() {
