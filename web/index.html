@@ -11,7 +11,7 @@
             audio { width: 90% }
             button, audio, select, input[type="file"]::file-selector-button {
                 background-color:  black; color: white;
-                border: none; border-radius: 4px; padding: 15px 32px; text-align: center;
+                border: none; border-radius: 4px; padding: 5px 5px; text-align: center;
                 text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px;
                 cursor: pointer; opacity: 0.6; transition: 0.3s;
             }
@@ -27,27 +27,15 @@
     <div>
         <select id="selZFiles" size="10" style="width: 600px; display: none"></select>
         <select id="selDFiles" size="10" style="width: 600px; display: none"></select>
-        <p>CHECKSUMS SHA-1</p>
         <div>
-        <label for="FileCS">FILE:</label>
-        <span id="FileCS"></span>
-        </div>
-        <div>
-        <label for="CasCS">CAS:</label>
-        <span id="CasCS"></span>
-        </div>
-        <div>
-        <label for="WavCS">WAV:</label>
-        <span id="WavCS"></span>
-        </div>
-        <div>
-            <label for="files" class="btn">SELECT DATS</label>
+            <label for="files" class="btn">Dats</label>
             <input type="file" accept=".dat, .xml" id="datfile-input" multiple>
         </div>
         <div>
-            <label for="files" class="btn">SELECT ROMS</label>
-            <input type="file" accept=".zip" id="file-input" multiple>
+            <label for="files" class="btn">Roms</label>
+            <input type="file" accept="" id="file-input" multiple>
         </div>
+        <button id="btnTest">Test</button>
 
         <label id="lblCount"></label>
         <br>

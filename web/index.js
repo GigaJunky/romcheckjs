@@ -14,71 +14,94 @@ const Audio = document.getElementById("Audio")
 , cfg = {checksums: ['SHA-1','CRC32'] }
 console.log('cfg: ', cfg)
 
+let dat, table, gamesTable = []
+
 
 fileInput.onchange = readFilesCStext // readFilesCSJson //readZipFiles //readFile
 datfileInput.onchange =  readDatFiles //readZipFiles //readFile
+
+function Dups()
+{
+    let seen = new Set()
+    var hasDuplicates = gamesTable.some(function(currentObject) {
+        return seen.size === seen.add(currentObject.name).crc
+    })
+
+}
+
+document.getElementById("btnTest").addEventListener('click', () => {
+    console.log('Button clicked!' )
+
+    let dups = []
+    for (const g of gamesTable)
+         if(dups.filter(f=> f.crc == g.crc).length>1)
+             dups.push(g.crc)
+    console.log(dups)
+    
+    
+
+      //const result = Object.groupBy(gamesTable, ({ crc }) =>  crc >1 ? "dups" : "nondups" );
+      console.log(Dups())
+
+})
+
+
 
 const enc = new TextDecoder("utf-8")
 function encStr(s) { return new TextEncoder("utf-8").encode(s) }
 function decStr(b) { return new TextDecoder("utf-8").decode(b) }
 
-let zentries, dat, datText, table, gamesTable = []
 
 // #region Tabulator
-
 
 var rowPopupFormatter = function(e, row, onRendered){
     var data = row.getData(),
     container = document.createElement("div"),
-    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
-    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
-    contents += "<li><strong>sha1:</strong> " + data.sha1 + "</li>";
-    contents += "<li><strong>md5:</strong> " + data.md5 + "</li>";
-    contents += "</ul>";
+    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>"
+    contents += "<li><strong>Name:</strong> " + data.name + "</li>"
+    contents += "<li><strong>sha1:</strong> " + data.sha1 + "</li>"
+    contents += "<li><strong>md5:</strong> " + data.md5 + "</li>"
+    contents += "</ul>"
 
-    container.innerHTML = contents;
+    container.innerHTML = contents
 
-    return container;
-};
+    return container
+}
 
 //create header popup contents
 var headerPopupFormatter = function(e, column, onRendered){
-    var container = document.createElement("div");
+    var container = document.createElement("div")
 
-    var label = document.createElement("label");
-    label.innerHTML = "Filter Column:";
-    label.style.display = "block";
-    label.style.fontSize = ".7em";
+    var label = document.createElement("label")
+    label.innerHTML = "Filter Column:"
+    label.style.display = "block"
+    label.style.fontSize = ".7em"
 
-    var input = document.createElement("input");
-    input.placeholder = "Filter Column...";
-    input.value = column.getHeaderFilterValue() || "";
+    var input = document.createElement("input")
+    input.placeholder = "Filter Column..."
+    input.value = column.getHeaderFilterValue() || ""
 
     input.addEventListener("keyup", (e) => {
-        column.setHeaderFilterValue(input.value);
-    });
+        column.setHeaderFilterValue(input.value)
+    })
 
-    container.appendChild(label);
-    container.appendChild(input);
+    container.appendChild(label)
+    container.appendChild(input)
 
-    return container;
+    return container
 }
 
 //create dummy header filter to allow popup to filter
-var emptyHeaderFilter = function(){
-    return document.createElement("div");;
-}
-
-//headerMenu:headerMenu
+var emptyHeaderFilter = function(){ return document.createElement("div") }
 
 var rowMenu = [
     {
         label:"<i class='fas fa-user'></i> Change Name",
-        action:function(e, row){ row.update({name:"Steve Bobberson"}); }
+        action:function(e, row){ row.update({name:"Steve Bobberson"}) }
     }
     ,{
         label:"<i class='fas fa-check-square'></i> Select Row",
-        action:function(e, row){ row.select(); }
+        action:function(e, row){ row.select() }
     }
     ,{ separator:true }
     ,{ label:"Print", action:function(e, row){ table.print(false, true) }} 
@@ -88,7 +111,7 @@ var rowMenu = [
         menu:[
             {
                 label:"<i class='fas fa-trash'></i> Delete Row",
-                action:function(e, row){ row.delete(); }
+                action:function(e, row){ row.delete() }
             },
             {
                 label:"<i class='fas fa-ban'></i> Disabled Option",
@@ -111,8 +134,15 @@ var rowMenu = [
     }
 ]
 
+let cols = "glen,folder,dname,fname,zname,size,zsize,match,crc,crcMatch,md5,sha1,sha1Match".split(",")
+let tcolumns = []
+for (const c of cols) 
+    tcolumns.push ({ field: c, title: c, headerFilter: true, headerMenu: headerMenu  })
 
-table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", clipboard:true, autoColumns:true, 
+console.log("tcol:", tcolumns)
+
+table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", clipboard:true,
+    //autoColumns:true, 
     placeholder:"Awaiting Data, Please Load File",
     rowClickPopup:rowPopupFormatter, 
     rowContextMenu: rowMenu,
@@ -120,7 +150,9 @@ table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", cl
     paginationSize: 100,
     paginationSizeSelector:[30, 50, 80, 100, 200],
     paginationCounter:"rows",
-
+    //groupBy: "crc",
+    columns: tcolumns
+/*
     autoColumnsDefinitions:function(definitions){
         for (const c of definitions) {
             c.headerFilter = true
@@ -129,6 +161,7 @@ table = new Tabulator("#table", { movableColumns: true, layout:"fitDataFill", cl
         }
         return definitions
     }
+*/
 })
 
 //trigger an alert message when the row is clicked
@@ -145,15 +178,13 @@ table.on("dataFiltered", function(filters, rows){
     lblCount.innerHTML = rows.length
 })
 window.addEventListener("keydown", (e) => {
-    console.log(`Key "${e.key}" pressed [event: keydown]  ${table.getPage()}`);
+    console.log(`Key "${e.key}" pressed [event: keydown]  ${table.getPage()}`)
     if(e.shiftKey)
         if(e.key === 'PageDown') table.nextPage()
         else if (e.key === 'PageUp')  table.previousPage()
         else if (e.key === 'Home')  table.setPage(1)
         else if (e.key === 'End')  table.setPage("last")
   })
-
-
 
 //define column header menu as column visibility toggle
     var headerMenu = function () {
@@ -215,7 +246,7 @@ async function readDatFiles(event)
 {
     for (const file of event.target.files) {
         const arrayBuffer = await file.arrayBuffer()
-        datText =  decStr(arrayBuffer)
+        , datText =  decStr(arrayBuffer)
         //console.log(datText)
         let jDat = xml2js(datText)
         if(jDat.game[0].rom == undefined) 
@@ -277,7 +308,10 @@ async function readDatFile(jDat, filename)
         for (const r of roms){ 
             console.log(g.$.name, r.$.crc )
             if(!gamesTable.some( i => i.crc == r.$.crc))
-                gamesTable.push({glen: jDat.game.length, zname: undefined, zsize: undefined,  name: g.$.name, match: 0, size: r.$.size, crc: r.$.crc, crcMatch: undefined, md5: r.$.md5, sha1: r.$.sha1, sha1Match: undefined })
+                gamesTable.push({
+                glen: jDat.game.length, dname: g.$.name,
+                size: r.$.size, crc: r.$.crc, md5: r.$.md5, sha1: r.$.sha1
+                })
         }
     }
     table.setData(gamesTable)
@@ -305,48 +339,97 @@ async function readDatFile(jDat, filename)
         table.setData(gamesTable)
     }
 
-async function readFilesCStext(f)
+function parseSystemInfoTxt(si)
 {
-    console.log('f:', dat)
-    //const games = dat.datafile.game
-    //console.log(games.length)
+    const ls = si.split(/\r\n|\n\r|\r|\n/)
 
-    for (const file of fileInput.files) {
-        let folder = 'a26'
-        console.log("fn: ",file.name)
-        const arrayBuffer = await file.arrayBuffer()
-        //const sha1 = await SHAbuf(arrayBuffer)
+    let sysinfo = {}, sec = [], sn = ""
 
-        
-        const {entries} = await unzipit.unzip(file)
-        for (const [name, entry] of Object.entries(entries)) {
-            //console.log(entry)
-            if(cfg.checksums != undefined){
-                checksums = await checkSums(new Uint8Array(await entry.arrayBuffer()), cfg.checksums)
-                console.log("cs:",checksums)
-            }
-
-            const crc =  entry._rawEntry.crc32.toString(16).padStart(8,"0")
-            //matches = dat.filter(f=> f[0].crc == crc)
-            //const matches = games.filter(f=> f.source && f.source[0].file && f.source[0].file[0].$.crc32 == crc ) //NoIntro .json
-            //const matches = gamesTable.filter(f=> f.crc == crc ) //NoIntro .json
-            let fi = gamesTable.findIndex(i => i.crc == crc)
-            if(fi >=0){
-                gamesTable[fi].folder = folder
-                gamesTable[fi].match = 1
-                gamesTable[fi].crcMatch = crc == checksums.CRC32
-                gamesTable[fi].sha1Match = gamesTable[fi].sha1 == checksums.SHA1
-                gamesTable[fi].zsize = file.size
-                gamesTable[fi].zname = file.name
-                console.log(gamesTable[fi])
-            }else
-                gamesTable.push({folder: folder, zname: file.name, zsize: file.size, match: -1, crc: crc, crcMatch: crc == checkSums.crc32 })
-
-            taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${fi} `
+    for (l of ls) {
+        l = l.trim()
+        if(l == "") continue
+        if(l.endsWith(":")){
+            if(sec.length > 0) sysinfo[sn] = sec
+            sn = l.replace(":","")
+            sec = []
         }
+        else sec.push(l)
     }
-    table.setData(gamesTable)   
+    return sysinfo
 }
+
+    async function readFilesCStext() {
+        console.log('f:')
+
+        const files = Array.from(fileInput.files) // Convert FileList to array
+        const f = files.find(f => f.name.toLowerCase() == "systeminfo.txt")
+        let folder = "?"
+
+        if (f) {
+            const arrayBuffer = await f.arrayBuffer()
+            let si = parseSystemInfoTxt(decStr(arrayBuffer))
+            console.log(si)
+            folder = si["Full system name"]
+        }
+
+        for (const file of fileInput.files) {
+            console.log("fn: ", file.name)
+            if (file.type == "application/zip") {
+                const { entries } = await unzipit.unzip(file)
+                for (const [name, entry] of Object.entries(entries)) {
+                    //console.log(entry)
+                    if (cfg.checksums != undefined) {
+                        checksums = await checkSums(new Uint8Array(await entry.arrayBuffer()), cfg.checksums)
+                        console.log("cs:", checksums)
+                    }
+
+                    const crc = entry._rawEntry.crc32.toString(16).padStart(8, "0")
+                    //matches = dat.filter(f=> f[0].crc == crc)
+                    //const matches = games.filter(f=> f.source && f.source[0].file && f.source[0].file[0].$.crc32 == crc ) //NoIntro .json
+                    //const matches = gamesTable.filter(f=> f.crc == crc ) //NoIntro .json
+                    let fi = gamesTable.findIndex(i => i.crc == crc)
+                    if (fi >= 0) {
+                        gamesTable[fi].folder = folder
+                        gamesTable[fi].match = 1
+                        gamesTable[fi].crcMatch = crc == checksums.CRC32
+                        gamesTable[fi].sha1Match = gamesTable[fi].sha1 == checksums.SHA1
+                        gamesTable[fi].zsize = file.size
+                        gamesTable[fi].zname = name
+                        console.log(gamesTable[fi])
+                    } else
+                        gamesTable.push({
+                            folder: folder,
+                            fname: file.name,
+                            zname: name,
+                            //name: file.name,
+                            zsize: file.size, size: file.size, match: -1, crc: crc, crcMatch: crc == checkSums.crc32 })
+
+                    taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${fi} `
+                }
+            }else{
+                const arrayBuffer = await file.arrayBuffer()
+                const buf = new Uint8Array(arrayBuffer)
+                const checksums =  await checkSums(buf, cfg.checksums)
+                let fi = gamesTable.findIndex(i => i.crc == checksums.CRC32)
+                if (fi >= 0) {
+                    gamesTable[fi].fname = file.name
+                    gamesTable[fi].folder = folder
+                    gamesTable[fi].match = 1
+                    gamesTable[fi].crcMatch = 1
+                    gamesTable[fi].sha1Match = gamesTable[fi].sha1 == checksums.SHA1
+                    gamesTable[fi].size = file.size
+                    console.log(gamesTable[fi])
+                } else
+                gamesTable.push({
+                     folder: folder, fname: file.name,
+                     //zname: null, zsize: null,
+                      size: file.size, match: -2, crc: checksums.CRC32,
+                      //crcMatch:  null,
+                       sha1: checksums.SHA1 })
+            }
+        }
+        table.setData(gamesTable)
+    }
 
 
 async function readFilesCSJson(f)
@@ -384,6 +467,7 @@ function printMsg(msg)
 }
 
 //for unzipit
+/*
 async function readZipFiles() {
     const f = fileInput.files[0]
     const arrayBuffer = await f.arrayBuffer()
@@ -408,7 +492,7 @@ async function readZipFiles() {
         await readFile(f)
     }
 }
-
+*/
 //#region checksum
 async function CheckSum(arrayBuffer, alg='SHA-1'){
     const hashBuffer = await crypto.subtle.digest(`${alg}`, arrayBuffer)
