@@ -16,52 +16,50 @@ console.log('cfg: ', cfg)
 
 fileInput.onchange = readFilesCStext // readFilesCSJson //readZipFiles //readFile
 datfileInput.onchange =  readDatFiles //readZipFiles //readFile
+selZFiles.ondblclick = selZFilesOnChange
+
+let zentries
 
 const enc = new TextDecoder("utf-8")
 function encStr(s) { return new TextEncoder("utf-8").encode(s) }
 function decStr(b) { return new TextDecoder("utf-8").decode(b) }
 
-
-function Dups()
-{
-    let seen = new Set()
-    var hasDuplicates = gamesTable.some(function(currentObject) {
-        return seen.size === seen.add(currentObject.name).crc
-    })
-}
-
 document.getElementById("btnTest").addEventListener('click', () => {
+    table.clearFilter()
+    dtable.clearFilter()
     console.log('Button clicked!', gamesTable.length, datsTable.length, datsTable[0] )
     for (let g of gamesTable){
-        console.log("g:", g.crc, g.fname)
         let f = datsTable.filter(f=> f.crc == g.crc)
         g.match = f.length
-        if (f.length > 0) console.log("crc found:", g.crc, f.length)        
     }
-
-        //if(dups.filter(f=> f.crc == g.crc).length>1)
-        //dups.push(g.crc)
-        //console.log(dups)
-        //const result = Object.groupBy(gamesTable, ({ crc }) =>  crc >1 ? "dups" : "nondups" );
-        //console.log(Dups())
+    table.setData(gamesTable)
 })
 
 async function readDatFiles(event)
 {
     for (const file of event.target.files) {
+        if(file.name.endsWith(".zip"))
+             return await readZipFiles(file)
+        
         const arrayBuffer = await file.arrayBuffer()
-        , datText =  decStr(arrayBuffer)
-        //console.log(datText)
-        let jDat = xml2js(datText)
-        if(jDat.game[0].rom == undefined) 
-            readDatFilesNIDB(jDat)
-        else if(jDat.header)
-            readDatFile(jDat, file)
-        else readMameDatFile(jDat, file)
+        await readDatFileType(arrayBuffer)
     }
 }
 
-async function readMameDatFile(jDat, file)
+async function readDatFileType(arrayBuffer)
+{
+    const datText =  decStr(arrayBuffer)
+    ,jDat = xml2js(datText)
+    if(jDat.game[0].rom == undefined) 
+        await readDatFilesNIDB(jDat)
+    else if(jDat.header)
+        await readDatFile(jDat)
+    else await readMameDatFile(jDat)
+
+}
+
+
+async function readMameDatFile(jDat)
 {
     //mame 0.78 mame.game.rom
     //mame 0.139 mame.game.rom
@@ -88,13 +86,13 @@ async function readMameDatFile(jDat, file)
 }
 
     //TOSEC
-async function readDatFile(jDat, filename)
+async function readDatFile(jDat)
 {
     if(jDat.header){
         const h = jDat.header
         console.log(h)
         printMsg(`Loading ${h.name} - ${h.category} - Ver: ${h.version} ${jDat.game.length | 0}`)
-    }else printMsg(filename)        
+    }     
     
     if(jDat.game && !Array.isArray(jDat.game)){
         console.log('only 1 game?!')
@@ -134,7 +132,7 @@ async function readDatFile(jDat, filename)
                         for (const gsf of files) {
                             //console.log(g.$.name, gsf.$.crc32 )
                             if (!datsTable.some(i => i.crc == gsf.$.crc32))
-                                datsTable.push({ glen: jDat.game.length, zname: undefined, zsize: undefined, name: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, crcMatch: undefined, md5: gsf.$.md5, sha1: gsf.$.sha1, sha1Match: undefined, bad: gsf.$.bad, region: g.archive.$.region })
+                                datsTable.push({ glen: jDat.game.length, name: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, md5: gsf.$.md5, sha1: gsf.$.sha1, sha1Match: undefined, bad: gsf.$.bad, region: g.archive.$.region })
                         }
                     }
                 }
@@ -145,8 +143,8 @@ async function readDatFile(jDat, filename)
 
 function parseSystemInfoTxt(si)
 {
-    const ls = si.split(/\r\n|\n\r|\r|\n/)
-
+    const ls = `${si}:\n`.split(/\r\n|\n\r|\r|\n/)
+    console.log("si:", ls)
     let sysinfo = {}, sec = [], sn = ""
 
     for (l of ls) {
@@ -172,13 +170,13 @@ function parseSystemInfoTxt(si)
         if (f) {
             const arrayBuffer = await f.arrayBuffer()
             let si = parseSystemInfoTxt(decStr(arrayBuffer))
-            console.log(si)
-            folder = si["Full system name"]
+            folder = si["full system name"]
+            console.log("folder: ", folder)
         }
 
         for (const file of fileInput.files) {
             console.log("fn: ", file.name)
-            if (file.type == "application/zip") {
+            if (file.name.toLowerCase().endsWith(".zip") ) {
                 const { entries } = await unzipit.unzip(file)
                 for (const [name, entry] of Object.entries(entries)) {
                     //console.log(entry)
@@ -197,7 +195,7 @@ function parseSystemInfoTxt(si)
                         gamesTable[fi].match = 1
                         gamesTable[fi].crcMatch = crc == checksums.CRC32
                         gamesTable[fi].sha1Match = gamesTable[fi].sha1 == checksums.SHA1
-                        gamesTable[fi].zsize = file.size
+                        gamesTable[fi].zsize = entry.compressedSize
                         gamesTable[fi].zname = name
                         console.log(gamesTable[fi])
                     } else
@@ -205,8 +203,7 @@ function parseSystemInfoTxt(si)
                             folder: folder,
                             fname: file.name,
                             zname: name,
-                            //name: file.name,
-                            zsize: file.size, size: file.size, match: -1, crc: crc, crcMatch: crc == checkSums.crc32 })
+                            zsize: entry.compressedSize, size: entry.size, match: 0, crc: crc, crcMatch: crc == checkSums.crc32, sha1: checksums.SHA1 })
 
                     taBas.value += `\n${name} bytes: ${entry.size} crc: ${crc}, match: ${fi} `
                 }
@@ -271,32 +268,42 @@ function printMsg(msg)
 }
 
 //for unzipit
-/*
-async function readZipFiles() {
-    const f = fileInput.files[0]
-    const arrayBuffer = await f.arrayBuffer()
-    FileCS.innerText =  await SHAbuf(arrayBuffer)
-    CasCS.innerText =  ""
-    WavCS.innerText =  ""
-    selZFiles.style.display = "block"
-    selDFiles.style.display = "none"
+
+async function readZipFiles(f) {
+    //const arrayBuffer = await f.arrayBuffer()
 
     if(f.name.toLowerCase().endsWith(".zip")){
-        const {entries} = await unzipit.unzip(f)
+        const {name, entries} = await unzipit.unzip(f)
+ 
         zentries = entries
         selZFiles.options.length = 0
-        for (const [name, entry] of Object.entries(zentries)) {
+        for (const [name, entry] of Object.entries(entries)) {
             var opt = document.createElement('option')
             opt.value = name
             opt.innerHTML = `${name} bytes: ${entry.size}`
             selZFiles.appendChild(opt)
         }
+        if(selZFiles.options.length ==1){
+            const arrayBuffer =  new Uint8Array(await zentries[selZFiles.options[0].value].arrayBuffer())
+            selZFiles.options.length = 0
+            return await readDatFileType(arrayBuffer)
+        }
+        selZFiles.style.display = "block"
+        selDFiles.style.display = "none"
+       
     } else{
         selZFiles.options.length = 0
         await readFile(f)
     }
 }
-*/
+
+async function selZFilesOnChange() {
+    const arrayBuffer =  new Uint8Array(await zentries[selZFiles.value].arrayBuffer())
+    await readDatFileType(arrayBuffer)
+}
+
+
+
 //#region checksum
 async function CheckSum(arrayBuffer, alg='SHA-1'){
     const hashBuffer = await crypto.subtle.digest(`${alg}`, arrayBuffer)
