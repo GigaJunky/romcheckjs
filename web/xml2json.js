@@ -29,28 +29,6 @@ function parseElement(xmlElement) {
   return result
 }
 
-function parseElement2(xmlElement) {
-  let result = {}
-  if (xmlElement.nodeType === Node.ELEMENT_NODE) {
-    result.$ = parseAttributes(xmlElement)
-
-    for (const childElement of xmlElement.children) {
-      //      if (Object.keys(result).length === 0) return xmlElement.textContent
-
-      const key = childElement.tagName
-      const value = parseElement(childElement)
-      //value.$ = parseAttributes(childElement)
-
-      if (result[key]) {
-        if (!Array.isArray(result[key]))
-          result[key] = [result[key]]
-        result[key].push(value)
-      } else
-        result[key] = value
-    }
-  }
-  return result
-}
 
 function parseAttributes(xmlElement) {
   if (xmlElement.attributes.length > 0) {
@@ -62,9 +40,9 @@ function parseAttributes(xmlElement) {
 }
 
 function xml2js(xmlData) {
-  const parser = new DOMParser()
-  const xmlDoc = parser.parseFromString(xmlData, 'text/xml')
-  return parseElement(xmlDoc.documentElement)
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(xmlData, 'text/xml')
+    return parseElement(xmlDoc.documentElement)
 }
 
 // Example usage:
@@ -79,5 +57,5 @@ const xmlData = `
     </address>
   </root>`
 
-console.log(JSON.stringify(xml2js(xmlData), 1, 2))
+//console.log(JSON.stringify(xml2js(xmlData), 1, 2))
 

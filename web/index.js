@@ -35,22 +35,44 @@ document.getElementById("btnTest").addEventListener('click', () => {
     table.setData(gamesTable)
 })
 
+async function readFileAsync(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => { resolve(reader.result) }
+        reader.onerror = (error) => { reject(error) }
+        reader.readAsText(file) // Or other read method
+    })
+}
+
 async function readDatFiles(event)
 {
     for (const file of event.target.files) {
         if(file.name.endsWith(".zip"))
              return await readZipFiles(file)
-        
-        const arrayBuffer = await file.arrayBuffer()
-        await readDatFileType(arrayBuffer)
+
+        const reader = new FileReader()
+        reader.addEventListener("load", () => {
+             let jDat = xml2js(reader.result)
+             console.log(jDat)
+             }, false )
+        reader.readAsText(file)
+       
+        //const arrayBuffer = await file.arrayBuffer()
+        readDatFileType(await readFileAsync(file))
     }
 }
 
-async function readDatFileType(arrayBuffer)
+async function readDatFileType(datText)
 {
-    const datText =  decStr(arrayBuffer)
-    ,jDat = xml2js(datText)
-    if(jDat.game[0].rom == undefined) 
+    const jDat = xml2js(datText)
+    if(jDat.body){
+        console.log(jDat)
+        printMsg(jDat.body.parsererror.div._)
+
+    }
+    
+
+    if(jDat.game && jDat.game[0].rom == undefined) 
         await readDatFilesNIDB(jDat)
     else if(jDat.header)
         await readDatFile(jDat)
@@ -109,11 +131,8 @@ async function readDatFile(jDat)
         let roms = Array.isArray(g.rom) ? g.rom : [g.rom]
         for (const r of roms){ 
             console.log(g.$.name, r.$.crc )
-            if(!datsTable.some( i => i.crc == r.$.crc))
-                datsTable.push({
-                glen: jDat.game.length, dname: g.$.name,
-                size: r.$.size, crc: r.$.crc, md5: r.$.md5, sha1: r.$.sha1
-                })
+            //if(!datsTable.some( i => i.crc == r.$.crc))
+                datsTable.push({ glen: jDat.game.length, dname: g.$.name, match: 0, size:   r.$.size, crc:     r.$.crc, md5: r.$.md5,   sha1: r.$.sha1 })
         }
     }
     dtable.setData(datsTable)
@@ -131,8 +150,8 @@ async function readDatFile(jDat)
                         let files = Array.isArray(gs.file) ? gs.file : [gs.file]
                         for (const gsf of files) {
                             //console.log(g.$.name, gsf.$.crc32 )
-                            if (!datsTable.some(i => i.crc == gsf.$.crc32))
-                                datsTable.push({ glen: jDat.game.length, name: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, md5: gsf.$.md5, sha1: gsf.$.sha1, sha1Match: undefined, bad: gsf.$.bad, region: g.archive.$.region })
+                            //if (!datsTable.some(i => i.crc == gsf.$.crc32))
+                                datsTable.push({ glen: jDat.game.length, dname: g.$.name, match: 0, size: gsf.$.size, crc: gsf.$.crc32, md5: gsf.$.md5, sha1: gsf.$.sha1, bad: gsf.$.bad, region: g.archive.$.region })
                         }
                     }
                 }
@@ -168,8 +187,9 @@ function parseSystemInfoTxt(si)
         let folder = "?"
 
         if (f) {
-            const arrayBuffer = await f.arrayBuffer()
-            let si = parseSystemInfoTxt(decStr(arrayBuffer))
+            //const arrayBuffer = await f.arrayBuffer()
+            //let si = parseSystemInfoTxt(decStr(arrayBuffer))
+            let si = parseSystemInfoTxt(readFileAsync(f))
             folder = si["full system name"]
             console.log("folder: ", folder)
         }
@@ -286,20 +306,20 @@ async function readZipFiles(f) {
         if(selZFiles.options.length ==1){
             const arrayBuffer =  new Uint8Array(await zentries[selZFiles.options[0].value].arrayBuffer())
             selZFiles.options.length = 0
-            return await readDatFileType(arrayBuffer)
+            return await readDatFileType(decStr(arrayBuffer))
         }
         selZFiles.style.display = "block"
         selDFiles.style.display = "none"
        
     } else{
         selZFiles.options.length = 0
-        await readFile(f)
+        //await readFile(f)
     }
 }
 
 async function selZFilesOnChange() {
     const arrayBuffer =  new Uint8Array(await zentries[selZFiles.value].arrayBuffer())
-    await readDatFileType(arrayBuffer)
+    await readDatFileType( decStr(arrayBuffer))
 }
 
 
