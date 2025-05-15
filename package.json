@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "buffer-crc32": "^1.0.0",
     "unzipit": "^1.4.3",
     "xml2js": "^0.6.2"

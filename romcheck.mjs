@@ -5,7 +5,6 @@ import * as fs from 'fs'
 import * as xml2js from 'xml2js'
 import * as crypto from 'crypto'
 import * as path from 'path'
-import { time, timeEnd } from 'node:console'
 
 const crc_table = makeCRCTable()
 let rom = process.argv[2]
@@ -13,6 +12,8 @@ console.log(rom)
 
 let cfg = {
     dats: {
+        path2: "/media/bitjunky/Ventoy/RetroPie/ROMVault_V3.7.2/DatRoot/Arcade/MAME",
+
         path :  "../../../RetroPie/ROMVault_V3.7.2/"
         ,names: [
             "Atari - Atari 2600 (DB Export) (20250404-023226).xml"
@@ -27,10 +28,10 @@ let cfg = {
         ]
     },
     roms: [
+        "/media/bitjunky/Ventoy/RetroPie/roms/mame-libretro/roms/",
         "/media/bitjunky/Ventoy/RetroPie/roms/n64/",
         "/media/bitjunky/Ventoy/RetroPie/roms/nes/"
         ,"/media/bitjunky/Ventoy/RetroPie/roms/atari2600/"
-        ,'/media/mike/Ventoy/RetroPie/roms/mame-libretro/roms/'
         ,'/media/mike/Ventoy/RetroPie/ROMVault_V3.7.2/RomRoot/Arcade/MAME/mame 0.78 ROMS(listxml)/'
     ]
 //    ,checksums: ['crc32','md5','sha1']
